@@ -98,19 +98,18 @@ DetectionResult(
 
 ## ⚙️ Customizing Trusted Installers (Allowlist)
 ```kotlin
-val allowlist = mutableSetOf(
-    "com.android.vending", // Google Play Store
-    "com.oppo.store",      // Oppo
-    "com.vivo.appstore",   // Vivo
-    "com.samsung.android.apps.securefolder",
-    "com.xiaomi.market",
-    "com.huawei.appmarket",
-    "com.realme.appstore",
-    "com.lenovo.store",
-    "com.sec.android.easyMover"
-)
-
-detector.setAllowlist(allowlist)
+        fun defaultAllowlist(): Set<String> = setOf(
+            "com.android.vending",
+            "com.oppo.store",
+            "com.vivo.appstore",
+            "com.samsung.android.app.samsungapps",
+            "com.samsung.android.apps.securefolder",
+            "com.xiaomi.market",
+            "com.huawei.appmarket",
+            "com.realme.appstore",
+            "com.lenovo.store",
+            "com.sec.android.easyMover"
+        )
 ```
 ✅ Add or remove any installer package by modifying the allowlist.
 
