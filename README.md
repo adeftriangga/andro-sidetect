@@ -99,10 +99,6 @@ val allowlist = mutableSetOf(
     "com.huawei.appmarket",                   // Huawei
     "com.realme.appstore",                    // Realme
     "com.lenovo.store",                       // Lenovo
-    "com.bbk.appstore",                       // BBK
-    "com.ksmobile.appstore",                  // K-Space
-    "com.coolpad.appstore",                   // Coolpad
-    "com.android.packageinstaller",           // Default installer
     "com.android.easy_mover"                  // Android Easy Mover
 )
 
