@@ -82,7 +82,7 @@ detector.detect { result ->
     }
 }
 ```
-
+---
 ## 💡 Detection Result 
 ```kotlin
 DetectionResult(
