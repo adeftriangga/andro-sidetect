@@ -59,15 +59,21 @@ include ':andro-sidetect'
 
 ## 🛠️ Usage Example
 
+You can combine the detection flags to handle scenarios where **both sideloading and accessibility services are active**:
+
 ```kotlin
 val detector = AndroidSideloadingDetector(context)
 
 detector.detect { result ->
     when {
-        result.isSideloadingDetected -> {
+        result.isSideloaded && result.isAccessibilityEnabled -> {
+            Log.w("Security", "⚠️ Sideloaded app AND accessibility service active. High risk!")
+            // Example: Show warning dialog or disable sensitive features
+        }
+        result.isSideloaded -> {
             Log.w("Security", "⚠️ App was sideloaded. Risky!")
         }
-        result.isAccessibilityServiceEnabled -> {
+        result.isAccessibilityEnabled -> {
             Log.w("Security", "⚠️ Accessibility Service is active. Verify source!")
         }
         else -> {
@@ -77,32 +83,17 @@ detector.detect { result ->
 }
 ```
 
-### Example Output
-```text
-DetectionResult(
-    isSideloadingDetected=true,
-    isAccessibilityServiceEnabled=false,
-    installSource=null,
-    message="Sideloaded app detected (installer=null)",
-    hasRisk=true,
-    confidence=0.95
-)
-```
-
----
-
 ## 💡 Detection Result 
 ```kotlin
-data class DetectionResult(
-    val isSideloadingDetected: Boolean = false,
-    val isAccessibilityServiceEnabled: Boolean = false,
-    val installSource: String? = null,
-    val message: String = "",
-    val hasRisk: Boolean = false,
-    val confidence: Double = 0.95
+DetectionResult(
+    isSideloadingUnknown = false,
+    isSideloaded = true,
+    isAccessibilityEnabled = false,
+    installSource = "com.android.vending",
+    confidence = 0.95,
+    message = "Sideloaded app detected (installer=com.android.vending)"
 )
 ```
-
 ---
 
 ## ⚙️ Customizing Trusted Installers (Allowlist)
