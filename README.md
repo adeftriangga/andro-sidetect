@@ -1,9 +1,10 @@
 # 🎯 `andro-sidetect` - Android Sideload & Accessibility Detection Library
-**Detect sideloaded apps and accessibility service risks with confidence. Lightweight, reusable, and ideal for security-aware apps and beyond.**
+**Detect sideloaded apps and accessibility service risks with confidence. Lightweight, reusable, and ideal for security-aware apps.**
 
 ---
 
-
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![JitPack](https://jitpack.io/v/adeftriangga/andro-sidetect.svg)](https://jitpack.io/#adeftriangga/andro-sidetect)
 
 ## ✅ Why Use `andro-sidetect`?
 
@@ -13,12 +14,11 @@ Malicious APKs often:
 
 `andro-sidetect` helps your app:
 - Detect if it was **sideloaded** (not from Play Store)
-- Check if **Accessibility Service is enabled** (a common malware vector)
+- Check if **Accessibility Service is enabled**
 - Report detection results via reusable callbacks
 - Be **privacy-aware** and compatible with modern Android versions
 
 ---
-
 
 ## 🔧 Features
 
@@ -26,30 +26,40 @@ Malicious APKs often:
 |-------|-----------|
 | 🔍 Sideloading Detection | Checks installer package name with fallbacks |
 | 🛡️ Accessibility Service Check | Detects if accessibility service is enabled |
-| 🔄 Configurable Allowlist | Easily add/remove trusted installers (Oppo, Vivo, Samsung, etc.) |
+| 🔄 Configurable Allowlist | Easily add/remove trusted installers |
 | 📱 OEM Installer Support | Pre-configured for: Samsung, Xiaomi, Oppo, Vivo, Huawei, Realme, etc. |
 | 💾 Backup/Restore Detection | Detects tools like *Android Easy Mover* |
-| 📁 Modular & Reusable | Return `DetectionResult` via callback—easy to integrate |
-| 🌐 Android 11+ Ready | Handles `queries` and `QUERY_ALL_PACKAGES` permissions correctly |
+| 📁 Modular & Reusable | Returns `DetectionResult` via callback—easy to integrate |
+| 🌐 Android 11+ Ready | Handles `queries` correctly |
 
 ---
 
 ## 📦 Installation
 
-Add to your `build.gradle` (Module: app):
-
+### Option 1: JitPack (Recommended)
+Add JitPack repository in your `settings.gradle` or `build.gradle`:
 ```groovy
+repositories {
+    maven { url 'https://jitpack.io' }
+}
 dependencies {
-    implementation 'id.supa:andro-sidetect:1.1.0'
+    implementation 'com.github.adeftriangga:andro-sidetect:1.1.0'
 }
 ```
->⚠️ Note: This library requires androidx.core:core-ktx (already in AndroidX projects).
----
 
+### Option 2: Local module
+Clone this repo and include it in your `settings.gradle`:
+```groovy
+include ':andro-sidetect'
+```
+
+>⚠️ Requires **AndroidX** and Kotlin (1.9+). Minimum SDK 21.
+
+---
 
 ## 🛠️ Usage Example
 
-```groovy
+```kotlin
 val detector = AndroidSideloadingDetector(context)
 
 detector.detect { result ->
@@ -64,57 +74,61 @@ detector.detect { result ->
             Log.d("Security", "✅ Safe and installed via Play Store or trusted source.")
         }
     }
-    // You can now use result.installSource, result.hasRisk, etc.
 }
 ```
 
----
-## 💡 Detection Result 
+### Example Output
+```text
+DetectionResult(
+    isSideloadingDetected=true,
+    isAccessibilityServiceEnabled=false,
+    installSource=null,
+    message="Sideloaded app detected (installer=null)",
+    hasRisk=true,
+    confidence=0.95
+)
+```
 
-The library returns a structured DetectionResult object for clarity and ease of integration:
-```groovy
+---
+
+## 💡 Detection Result 
+```kotlin
 data class DetectionResult(
     val isSideloadingDetected: Boolean = false,
     val isAccessibilityServiceEnabled: Boolean = false,
-    val installSource: String? = null, // e.g., "PLAY_STORE", "OPPO_STORE", "EASY_MOVER"
+    val installSource: String? = null,
     val message: String = "",
     val hasRisk: Boolean = false,
-    val confidence: Double = 0.95 // High confidence
+    val confidence: Double = 0.95
 )
 ```
->You can easily chain this with your own security logic, UI warnings, or logging.
+
 ---
 
-
 ## ⚙️ Customizing Trusted Installers (Allowlist)
-
-`andro-sidetect` includes a configurable allowlist of trusted installer packages. You can customize it at runtime:
-```groovy
+```kotlin
 val allowlist = mutableSetOf(
-    "com.android.vending",                    // Google Play Store
-    "com.oppo.store",                         // Oppo
-    "com.vivo.appstore",                      // Vivo
-    "com.samsung.android.apps.securefolder", // Samsung
-    "com.xiaomi.market",                      // Xiaomi
-    "com.huawei.appmarket",                   // Huawei
-    "com.realme.appstore",                    // Realme
-    "com.lenovo.store",                       // Lenovo
-    "com.android.easy_mover"                  // Android Easy Mover
+    "com.android.vending", // Google Play Store
+    "com.oppo.store",      // Oppo
+    "com.vivo.appstore",   // Vivo
+    "com.samsung.android.apps.securefolder",
+    "com.xiaomi.market",
+    "com.huawei.appmarket",
+    "com.realme.appstore",
+    "com.lenovo.store",
+    "com.sec.android.easyMover"
 )
 
 detector.setAllowlist(allowlist)
 ```
->✅ Add or remove any installer package by modifying the allowlist.
+✅ Add or remove any installer package by modifying the allowlist.
+
 ---
 
+## 🔐 Android 11+ Compatibility
+⚠️ On Android 11+, `getInstallerPackageName()` may return null unless you declare `<queries>`:
 
-## 🔐 Android 11+ Compatibility (API 30+)
-⚠️ Critical Note: Starting with Android 11 (API 30), getInstallerPackageName() may return null for many apps unless:
-
-You declare queries in AndroidManifest.xml, OR
-You have the QUERY_ALL_PACKAGES permission (which requires user approval and is restricted)
-✅ Solution: Use <queries> in AndroidManifest.xml
-```groovy
+```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="your.app.package">
 
@@ -127,33 +141,36 @@ You have the QUERY_ALL_PACKAGES permission (which requires user approval and is 
         <package android:name="com.huawei.appmarket" />
         <package android:name="com.realme.appstore" />
         <package android:name="com.lenovo.store" />
-        <package android:name="com.bbk.appstore" />
-        <package android:name="com.ksmobile.appstore" />
-        <package android:name="com.coolpad.appstore" />
-        <package android:name="com.android.packageinstaller" />
-        <package android:name="com.android.easy_mover" />
+        <package android:name="com.sec.android.easyMover" />
     </queries>
 
-    ...
 </manifest>
 ```
->✅ This ensures getInstallerPackageName() returns accurate values on Android 11+.
->💡 Tip: You can add more from PackageInstaller or OEM-specific installers
+✅ This ensures correct installer detection on Android 11+.
+
 ---
 
+## 📝 Notes on Installer Detection
+Since Android 11+, `getInstallerPackageName()` may return `null` for Play Store installs.
+This library  reports `isSideloadingUnknown = true` when installer cannot be determined,
+allowing the caller to treat it as *unknown* rather than a confirmed sideload.
+This avoids false positives on modern devices.
+
+---
 ## 🛡️ Security & Privacy
-- No data is collected or sent over the network.
-- All detection is done locally on the device.
-- No access to sensitive data beyond package metadata.
+- No data leaves the device  
+- No network calls  
+- Uses only package metadata  
 
 ---
+
 ## 🤝 Contributing
-We welcome contributions! Please open issues or PRs to:
-- Add support for new OEM installers
-- Improve detection logic
-- Add tests or documentation
----
-## 📜 License
+- Fork the repo & create a feature branch  
+- Add tests for new logic  
+- Submit a PR with description  
 
+---
+
+## 📜 License
 MIT License  
 © 2025 [adeftriangga](https://github.com/adeftriangga)

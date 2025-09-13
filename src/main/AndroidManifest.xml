@@ -1,0 +1,16 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="id.adeftriangga.androsidetect">
+
+    <queries>
+        <package android:name="com.android.vending" />
+        <package android:name="com.oppo.store" />
+        <package android:name="com.vivo.appstore" />
+        <package android:name="com.samsung.android.apps.securefolder" />
+        <package android:name="com.xiaomi.market" />
+        <package android:name="com.huawei.appmarket" />
+        <package android:name="com.realme.appstore" />
+        <package android:name="com.lenovo.store" />
+        <package android:name="com.sec.android.easyMover" />
+    </queries>
+
+</manifest>
