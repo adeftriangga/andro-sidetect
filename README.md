@@ -13,7 +13,7 @@ Malicious APKs often:
 - Detect if there are  **sideloaded apps** (not from Play Store) on a device
 - Check if **Accessibility Service is enabled**
 - Report detection results via reusable callbacks
-- Be **privacy-aware** and compatible with modern Android versions
+- Compatible with modern Android versions
 
 ---
 
