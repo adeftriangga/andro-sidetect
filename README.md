@@ -1,10 +1,7 @@
 # 🎯 `andro-sidetect` - Android Sideload & Accessibility Detection Library
-**Detect sideloaded apps and accessibility service risks with confidence. Lightweight, reusable, and ideal for security-aware apps.**
+**Detect sideloaded apps on a device, and check if they have accessibility services enabled. Lightweight, reusable, and ideal for security-aware apps.**
 
 ---
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![JitPack](https://jitpack.io/v/adeftriangga/andro-sidetect.svg)](https://jitpack.io/#adeftriangga/andro-sidetect)
 
 ## ✅ Why Use `andro-sidetect`?
 
@@ -13,7 +10,7 @@ Malicious APKs often:
 - **Enable Accessibility Services** to take control of the device
 
 `andro-sidetect` helps your app:
-- Detect if it was **sideloaded** (not from Play Store)
+- Detect if there are  **sideloaded apps** (not from Play Store) on a device
 - Check if **Accessibility Service is enabled**
 - Report detection results via reusable callbacks
 - Be **privacy-aware** and compatible with modern Android versions
@@ -28,8 +25,7 @@ Malicious APKs often:
 | 🛡️ Accessibility Service Check | Detects if accessibility service is enabled |
 | 🔄 Configurable Allowlist | Easily add/remove trusted installers |
 | 📱 OEM Installer Support | Pre-configured for: Samsung, Xiaomi, Oppo, Vivo, Huawei, Realme, etc. |
-| 💾 Backup/Restore Detection | Detects tools like *Android Easy Mover* |
-| 📁 Modular & Reusable | Returns `DetectionResult` via callback—easy to integrate |
+| 💾 Backup/Restore App Detection | Detects tools like *Android Easy Mover* |
 | 🌐 Android 11+ Ready | Handles `queries` correctly |
 
 ---
@@ -59,46 +55,49 @@ include ':andro-sidetect'
 
 ## 🛠️ Usage Example
 
-You can combine the detection flags to handle scenarios where **both sideloading and accessibility services are active**:
-
 ```kotlin
 val detector = AndroidSideloadingDetector(context)
+val result = detector.detectAll()
 
-detector.detect { result ->
-    when {
-        result.isSideloaded && result.isAccessibilityEnabled -> {
-            Log.w("Security", "⚠️ Sideloaded app AND accessibility service active. High risk!")
-            // Example: Show warning dialog or disable sensitive features
-        }
-        result.isSideloaded -> {
-            Log.w("Security", "⚠️ App was sideloaded. Risky!")
-        }
-        result.isAccessibilityEnabled -> {
-            Log.w("Security", "⚠️ Accessibility Service is active. Verify source!")
-        }
-        else -> {
-            Log.d("Security", "✅ Safe and installed via Play Store or trusted source.")
-        }
+when {
+    result.sideloadedApps.any { it.isAccessibilityEnabled } -> {
+        Log.w("Security", "⚠️ High Risk: ${result.sideloadedApps.size} sideloaded apps with accessibility enabled")
+    }
+    result.sideloadedApps.isNotEmpty() -> {
+        Log.w("Security", "⚠️ Found ${result.sideloadedApps.size} sideloaded apps")
+    }
+    else -> {
+        Log.d("Security", "✅ No sideloaded apps detected")
     }
 }
 ```
----
-## 💡 Detection Result 
+
+You can also iterate through all detected apps:
+
 ```kotlin
-DetectionResult(
-    isSideloadingUnknown = false,
-    isSideloaded = true,
-    isAccessibilityEnabled = false,
-    installSource = "com.android.vending",
+result.sideloadedApps.forEach { app ->
+    Log.i("Security", "• ${app.packageName} (installer=${app.installer ?: "unknown"})" +
+            if (app.isAccessibilityEnabled) " [Accessibility Enabled]" else "")
+}
+```
+---
+## 💡 Example Output
+```
+DeviceDetectionResult(
+    sideloadedApps = listOf(
+        AppDetectionResult(packageName=com.evil.app, installer=null, isSideloaded=false, isInstallerUnknown=true, isAccessibilityEnabled=true)
+    ),
     confidence = 0.95,
-    message = "Sideloaded app detected (installer=com.android.vending)"
+    message = "Detected 1 sideloaded/unknown apps"
 )
 ```
 ---
 
+
+
 ## ⚙️ Customizing Trusted Installers (Allowlist)
 ```kotlin
-        fun defaultAllowlist(): Set<String> = setOf(
+fun defaultAllowlist(): Set<String> = setOf(
             "com.android.vending",
             "com.oppo.store",
             "com.vivo.appstore",
@@ -119,32 +118,38 @@ DetectionResult(
 ⚠️ On Android 11+, `getInstallerPackageName()` may return null unless you declare `<queries>`:
 
 ```xml
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="your.app.package">
+    package="com.example.myapp">
 
+    <!-- Needed for Android 11+ to query installed apps -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MyApp">
+        
+        <!-- Your activities/services/etc go here -->
+
+    </application>
+
+    <!-- Allow querying visibility of all installed apps -->
     <queries>
-        <package android:name="com.android.vending" />
-        <package android:name="com.oppo.store" />
-        <package android:name="com.vivo.appstore" />
-        <package android:name="com.samsung.android.apps.securefolder" />
-        <package android:name="com.xiaomi.market" />
-        <package android:name="com.huawei.appmarket" />
-        <package android:name="com.realme.appstore" />
-        <package android:name="com.lenovo.store" />
-        <package android:name="com.sec.android.easyMover" />
+        <!-- Wildcard: see all installed apps -->
+        <package android:name="*" />
     </queries>
 
 </manifest>
 ```
-✅ This ensures correct installer detection on Android 11+.
 
 ---
 
-## 📝 Notes on Installer Detection
-Since Android 11+, `getInstallerPackageName()` may return `null` for Play Store installs.
-This library  reports `isSideloadingUnknown = true` when installer cannot be determined,
-allowing the caller to treat it as *unknown* rather than a confirmed sideload.
-This avoids false positives on modern devices.
+## 📝 Notes
+
+- Installer detection uses `PackageManager.getInstallerPackageName()`.
+- Accessibility check is only performed **for sideloaded/unknown apps** for better performance.
 
 ---
 ## 🛡️ Security & Privacy
